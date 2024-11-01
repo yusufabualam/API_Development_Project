@@ -1,21 +1,27 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
 from bson.objectid import ObjectId
+import os
+from config import Config
+from dotenv import load_dotenv 
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# MongoDB Configuration
-app.config["MONGO_URI"] = "mongodb://localhost:27017/appdb2"
+# Load configuration from config.py
+app.config.from_object(Config)
 mongo = PyMongo(app)
 
 # JWT Configuration
-app.config["SECRET_KEY"] = "123456"
-app.config["JWT_SECRET_KEY"] = "yusuf12345"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 jwt = JWTManager(app)
+
+@app.route('/')
+def home():
+    return  "<h1>Welcome to the Flask API!</h1>"
 
 # Sign-Up Endpoint
 @app.route("/signup", methods=['POST'])
@@ -128,9 +134,6 @@ def invite_user(organization_id):
     )
 
     return jsonify({"message": "User invited successfully."}), 200
-from flask import jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from bson.objectid import ObjectId
 
 # CRUD for Single Organization
 @app.route('/organization/<organization_id>', methods=['GET', 'PUT', 'DELETE'])
@@ -190,4 +193,4 @@ def handle_organization(organization_id):
         return jsonify({"message": "Organization deleted successfully."}), 200
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
